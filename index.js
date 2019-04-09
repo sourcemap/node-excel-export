@@ -27,9 +27,12 @@ let buildExport = params => {
     //build the header row
     let header = []
     for (let col in specification) {
+      let index = 0;
       header.push({
         value: specification[col].displayName,
-        style: specification[col].headerStyle || ''
+        style: specification[col].headerStyle || '',
+        position: specification[col].position,
+        questionId: specification[col].questionId
       })
 
       if (specification[col].width) {
@@ -45,12 +48,20 @@ let buildExport = params => {
       }
 
     }
-    data.push(header) //Inject the header at 0
+
+    let sortedHeaders = header.slice().sort((a, b) => {
+      return a.position - b.position;
+    })
+    data.push(sortedHeaders) //Inject the header at 0
 
     dataset.forEach(record => {
-      let row = []
-      for (let col in specification) {
+      let row = [];
+      sortedHeaders.forEach((q, i) => {
+        let col = q.questionId
         let cell_value = record[col]
+
+        if(!cell_value)
+          cell_value = "";
 
         if (specification[col].cellFormat && typeof specification[col].cellFormat == 'function') {
           cell_value = specification[col].cellFormat(record[col], record)
@@ -68,7 +79,7 @@ let buildExport = params => {
           }
         }
         row.push(cell_value) // Push new cell to the row
-      }
+      })
       data.push(row) // Push new row to the sheet
     })
 
